@@ -1,13 +1,53 @@
 import json
+import os
 import boto3
+import smtplib
 import uuid
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime
 
-# Inicializa o recurso fora do handler para melhor performance
+# ColdStart
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('EmailsEnsaiosLocaisGuarulhos')
 
+def monta_html_email(email_usuario):
+    html = f"""
+    <html>
+    <body>
+        <h2>🚨 Novo Cadastro de E-mail 🚨</h2>
+        <p>Olá,</p>
+        <p>O e-mail <strong>{email_usuario}</strong> foi cadastrado com sucesso para receber notificações dos ensaios locais em Guarulhos.</p>
+        <p>Obrigado por se inscrever!</p>
+        <br>
+    </body>
+    </html>
+    """
+    return html
+
+def enviar_email(destinatario, mensagem_html):
+    remetente    = os.environ.get('EMAIL_USER')
+    senha        = os.environ.get('EMAIL_PASS')
+    destinatario = os.environ.get('EMAIL_USER') #um email apra mim mesmo, para testar o envio de email, depois pode ser modificado para enviar para os emails cadastrados no DynamoDB
+
+     # MIMEMultipart para o Gmail entender que é um e-mail rico, ou seja, poder usar sintaxe HTML e deixar o e-mail mais bonito
+    msg = MIMEMultipart()
+    msg['Subject'] = f"🚨 Aviso De Cadastro- {datetime.now().strftime('%d/%m/%Y')}"
+    msg['From']    = f"Ensaios Guarulhos <{remetente}>"
+    msg['To']      = destinatario
+    msg.attach(MIMEText(mensagem_html, 'html'))
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(remetente, senha)
+            # enviando o msg.as_string() que contém o HTML formatado
+            server.sendmail(remetente, destinatario, msg.as_string())
+        
+    except Exception as e:
+        print(f"Erro ao enviar e-mail: {e}")
+
+
 def lambda_handler(event, context):
-    # 1. Definimos os cabeçalhos de CORS que serão usados em TODAS as respostas
     headers = {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
@@ -15,8 +55,7 @@ def lambda_handler(event, context):
         'Access-Control-Allow-Headers': 'Content-Type'
     }
 
-    # 2. Respondemos IMEDIATAMENTE ao navegador se for um 'Preflight' (OPTIONS)
-    # Isso resolve o erro vermelho do console
+
     http_method = event.get('requestContext', {}).get('http', {}).get('method')
     if http_method == 'OPTIONS':
         return {
@@ -25,8 +64,8 @@ def lambda_handler(event, context):
             'body': json.dumps('CORS OK')
         }
 
+    # Pegando o corpo da requisição e convertendo de string para JSON
     try:
-        # 3. Pegamos o corpo da requisição com segurança
         body_str = event.get('body', '{}')
         body = json.loads(body_str)
         email_usuario = body.get('email')
@@ -38,13 +77,17 @@ def lambda_handler(event, context):
                 'body': json.dumps('Email nao fornecido no JSON')
             }
 
-        # 4. Gravação no DynamoDB
+        # Grava no dynamoDB, gerando um ID único para cada email
         table.put_item(
             Item={
                 'id': str(uuid.uuid4()),
                 'Emails': email_usuario
             }
         )
+
+        # Envia aviso de cadastro
+        html_email = monta_html_email(email_usuario)
+        enviar_email(email_usuario, html_email)
 
         return {
             'statusCode': 200,
@@ -53,7 +96,7 @@ def lambda_handler(event, context):
         }
 
     except Exception as e:
-        # Se der erro no banco, retornamos o erro com os Headers de CORS
+        # Se der erro no banco, retorna o erro com os Headers de CORS
         # para que o navegador exiba o erro real em vez de travar no CORS
         print(f"Erro: {str(e)}")
         return {

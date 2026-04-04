@@ -7,13 +7,13 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
 
-REGION = "us-east-1" 
+REGION     = "us-east-1" 
 TABLE_NAME = "EmailsEnsaiosLocaisGuarulhos"
 
 def buscar_emails_dynamo():
     """Busca todos os e-mails cadastrados na tabela do DynamoDB."""
     dynamodb = boto3.resource('dynamodb', region_name=REGION)
-    table = dynamodb.Table(TABLE_NAME)
+    table    = dynamodb.Table(TABLE_NAME)
     response = table.scan()
     # Retorna uma lista apenas com os endereços de e-mail
     return [item['Emails'] for item in response.get('Items', [])]
@@ -45,8 +45,8 @@ def enviar_email(destinatarios, mensagem_html):
         print(f"Erro ao enviar e-mail: {e}")
 
 def job():
-    hoje = datetime.now().strftime('%Y-%m-%d')
-    df = pd.read_csv('EnsaiosGuarulhos.csv') 
+    hoje       = datetime.now().strftime('%Y-%m-%d')
+    df         = pd.read_csv('EnsaiosGuarulhos.csv') 
     df['data'] = df['data'].astype(str).str.strip()
     
     # Filtra TODOS os eventos de hoje

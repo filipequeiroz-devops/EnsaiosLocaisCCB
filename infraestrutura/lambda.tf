@@ -17,6 +17,8 @@ resource "aws_lambda_function" "cadastro_email_lambda" {
   environment {
     variables = {
       TABLE_NAME = aws_dynamodb_table.EmailsEnsaiosLocaisGuarulhos.name
+      EMAIL_USER = var.email_user
+      EMAIL_PASS = var.email_pass
     }
   }
 }
