@@ -24,12 +24,20 @@ resource "aws_apigatewayv2_integration" "lambda_integration" {
   integration_uri  = aws_lambda_function.cadastro_email_lambda.invoke_arn
 }
 
-#Definindo Rota
+#Definindo Rota para gravar emails
 resource "aws_apigatewayv2_route" "lambda_route" {
   api_id    = aws_apigatewayv2_api.lambda_api.id
   route_key = "POST /cadastro"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
 }
+
+#Definindo Rota para gravar numeros de telefone
+resource "aws_apigatewayv2_route" "lambda_route" {
+  api_id    = aws_apigatewayv2_api.lambda_api.id
+  route_key = "POST /cadastro-telefone"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+}
+
 
 #Permissao para a API chamar a função lambda
 resource "aws_lambda_permission" "api_gw" {

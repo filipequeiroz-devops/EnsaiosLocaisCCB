@@ -28,7 +28,7 @@ def monta_html_email(email_usuario):
 def enviar_email(destinatario, mensagem_html):
     remetente    = os.environ.get('EMAIL_USER')
     senha        = os.environ.get('EMAIL_PASS')
-    destinatario = os.environ.get('EMAIL_USER') #um email apra mim mesmo, para testar o envio de email, depois pode ser modificado para enviar para os emails cadastrados no DynamoDB
+    destinatario = os.environ.get('EMAIL_USER') #um email paea  mim mesmo, para testar o envio de email, depois pode ser modificado para enviar para os emails cadastrados no DynamoDB
 
      # MIMEMultipart para o Gmail entender que é um e-mail rico, ou seja, poder usar sintaxe HTML e deixar o e-mail mais bonito
     msg = MIMEMultipart()
