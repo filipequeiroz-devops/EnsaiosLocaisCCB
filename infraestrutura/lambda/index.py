@@ -3,17 +3,17 @@ import os
 import boto3
 import smtplib
 import uuid
+import urllib.request
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
+
 # ColdStart
 dynamodb = boto3.resource('dynamodb')
-# Dica: No futuro, talvez compense renomear a tabela para "ContatosEnsaiosLocaisGuarulhos"
 table = dynamodb.Table('EmailsEnsaiosLocaisGuarulhos')
 
 def monta_html_email(tipo_cadastro, contato_usuario):
-    # Deixa o texto bonitinho dependendo do que o usuário escolheu
     tipo_formatado = "E-mail" if tipo_cadastro == "email" else "WhatsApp (Telefone)"
     
     html = f"""
@@ -36,7 +36,7 @@ def monta_html_email(tipo_cadastro, contato_usuario):
 def enviar_email(destinatario, mensagem_html):
     remetente    = os.environ.get('EMAIL_USER')
     senha        = os.environ.get('EMAIL_PASS')
-    destinatario = os.environ.get('EMAIL_USER') # Mantido para você receber os testes
+    destinatario = os.environ.get('EMAIL_USER')
 
     msg = MIMEMultipart()
     msg['Subject'] = f"🚨 Aviso De Cadastro - {datetime.now().strftime('%d/%m/%Y')}"
@@ -52,6 +52,8 @@ def enviar_email(destinatario, mensagem_html):
     except Exception as e:
         print(f"Erro ao enviar e-mail: {e}")
 
+
+
 def lambda_handler(event, context):
     headers = {
         'Content-Type': 'application/json',
@@ -61,6 +63,7 @@ def lambda_handler(event, context):
     }
 
     http_method = event.get('requestContext', {}).get('http', {}).get('method')
+
     if http_method == 'OPTIONS':
         return {
             'statusCode': 200,
@@ -70,10 +73,10 @@ def lambda_handler(event, context):
 
     try:
         body_str = event.get('body', '{}')
-        body = json.loads(body_str)
+        body     = json.loads(body_str)
         
         # Agora pegamos os dois campos que vêm do novo Frontend
-        tipo = body.get('tipo')
+        tipo    = body.get('tipo')
         contato = body.get('contato')
 
         # Validação simples
@@ -85,17 +88,16 @@ def lambda_handler(event, context):
             }
 
         # Grava no DynamoDB
-        # Adicionei a coluna 'Tipo' e mudei a coluna de valor para 'Contato'
         table.put_item(
             Item={
                 'id': str(uuid.uuid4()),
                 'Tipo': tipo, 
                 'Contato': contato,
-                'DataCadastro': datetime.now().isoformat() # Boa prática adicionar data de inclusão!
+                'DataCadastro': datetime.now().isoformat()
             }
         )
 
-        # Envia aviso de cadastro para você
+        #  Alerta de cadastro: Envia para mim mesmo um e-mail toda vez que alguém se cadastrar (seja por WhatsApp ou E-mail)
         html_email = monta_html_email(tipo, contato)
         enviar_email(contato, html_email)
 

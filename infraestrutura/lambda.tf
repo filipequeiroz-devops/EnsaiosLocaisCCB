@@ -19,6 +19,8 @@ resource "aws_lambda_function" "cadastro_email_lambda" {
       TABLE_NAME = aws_dynamodb_table.EmailsEnsaiosLocaisGuarulhos.name
       EMAIL_USER = var.email_user
       EMAIL_PASS = var.email_pass
+      PHONE_NUMBER_ID = var.phone_number_id
+      WHATSAPP_TOKEN = var.whatsapp_token
     }
   }
 }

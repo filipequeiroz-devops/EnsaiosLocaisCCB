@@ -1,7 +1,9 @@
 import os
+import json
 import pandas as pd
 import boto3
 import smtplib
+import urllib.request
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
@@ -24,9 +26,32 @@ def buscar_emails_dynamo():
             
     return lista_emails
 
+def enviar_mensagem_whatsapp(telefone_destino, texto_resposta):
+    url = f"https://graph.facebook.com/v22.0/{os.environ.get('PHONE_NUMBER_ID')}/messages"
+    headers = {
+        'Authorization': f'Bearer {os.environ.get("WHATSAPP_TOKEN")}',
+        'Content-Type' : 'application/json'
+    }
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type"   : "individual",
+        "to"               : telefone_destino,
+        "type"             : "text",
+        "text"             : {"preview_url": False, "body": texto_resposta}
+    }
+
+    data_bytes = json.dumps(payload).encode('utf-8')
+    req        = urllib.request.Request(url, data=data_bytes, headers=headers, method='POST')
+
+    try:
+        with urllib.request.urlopen(req) as response:
+            print(f"Sucesso Mensagem whatsapp enviada! Status: {response.getcode()}")
+    except Exception as e:
+        print(f"Erro WhatsApp: {str(e)}")
+
 def enviar_email(destinatarios, mensagem_html):
     remetente = os.environ.get('EMAIL_USER')
-    senha = os.environ.get('EMAIL_PASS')
+    senha     = os.environ.get('EMAIL_PASS')
     
     if not remetente or not senha:
         print("Erro: Credenciais de e-mail não configuradas.")
@@ -35,12 +60,9 @@ def enviar_email(destinatarios, mensagem_html):
     # MIMEMultipart para o Gmail entender que é um e-mail rico
     msg = MIMEMultipart()
     msg['Subject'] = f"🔔 Aviso de Ensaio - {datetime.now().strftime('%d/%m/%Y')}"
-    msg['From'] = f"Ensaios Guarulhos <{remetente}>"
+    msg['From']    = f"Ensaios Guarulhos <{remetente}>"
+    msg['To']      = remetente # O destinatário real vai no sendmail() para ser BCC (Cópia Oculta)
     
-    # Boa prática de segurança: Colocamos o seu próprio e-mail no "To" (Para).
-    # Os destinatários reais vão direto no .sendmail(), funcionando como BCC (Cópia Oculta).
-    msg['To'] = remetente
-
     # Anexando ao corpo do email
     msg.attach(MIMEText(mensagem_html, 'html'))
 
