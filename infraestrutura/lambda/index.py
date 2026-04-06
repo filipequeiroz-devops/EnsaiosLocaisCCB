@@ -9,16 +9,24 @@ from datetime import datetime
 
 # ColdStart
 dynamodb = boto3.resource('dynamodb')
+# Dica: No futuro, talvez compense renomear a tabela para "ContatosEnsaiosLocaisGuarulhos"
 table = dynamodb.Table('EmailsEnsaiosLocaisGuarulhos')
 
-def monta_html_email(email_usuario):
+def monta_html_email(tipo_cadastro, contato_usuario):
+    # Deixa o texto bonitinho dependendo do que o usuário escolheu
+    tipo_formatado = "E-mail" if tipo_cadastro == "email" else "WhatsApp (Telefone)"
+    
     html = f"""
     <html>
     <body>
-        <h2>🚨 Novo Cadastro de E-mail 🚨</h2>
+        <h2>🚨 Novo Cadastro de Contato 🚨</h2>
         <p>Olá,</p>
-        <p>O e-mail <strong>{email_usuario}</strong> foi cadastrado com sucesso para receber notificações dos ensaios locais em Guarulhos.</p>
-        <p>Obrigado por se inscrever!</p>
+        <p>Um novo usuário acabou de se inscrever para os ensaios em Guarulhos.</p>
+        <ul>
+            <li><strong>Tipo:</strong> {tipo_formatado}</li>
+            <li><strong>Contato:</strong> {contato_usuario}</li>
+        </ul>
+        <p>Obrigado por acompanhar o sistema!</p>
         <br>
     </body>
     </html>
@@ -28,11 +36,10 @@ def monta_html_email(email_usuario):
 def enviar_email(destinatario, mensagem_html):
     remetente    = os.environ.get('EMAIL_USER')
     senha        = os.environ.get('EMAIL_PASS')
-    destinatario = os.environ.get('EMAIL_USER') #um email paea  mim mesmo, para testar o envio de email, depois pode ser modificado para enviar para os emails cadastrados no DynamoDB
+    destinatario = os.environ.get('EMAIL_USER') # Mantido para você receber os testes
 
-     # MIMEMultipart para o Gmail entender que é um e-mail rico, ou seja, poder usar sintaxe HTML e deixar o e-mail mais bonito
     msg = MIMEMultipart()
-    msg['Subject'] = f"🚨 Aviso De Cadastro- {datetime.now().strftime('%d/%m/%Y')}"
+    msg['Subject'] = f"🚨 Aviso De Cadastro - {datetime.now().strftime('%d/%m/%Y')}"
     msg['From']    = f"Ensaios Guarulhos <{remetente}>"
     msg['To']      = destinatario
     msg.attach(MIMEText(mensagem_html, 'html'))
@@ -40,12 +47,10 @@ def enviar_email(destinatario, mensagem_html):
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(remetente, senha)
-            # enviando o msg.as_string() que contém o HTML formatado
             server.sendmail(remetente, destinatario, msg.as_string())
         
     except Exception as e:
         print(f"Erro ao enviar e-mail: {e}")
-
 
 def lambda_handler(event, context):
     headers = {
@@ -55,7 +60,6 @@ def lambda_handler(event, context):
         'Access-Control-Allow-Headers': 'Content-Type'
     }
 
-
     http_method = event.get('requestContext', {}).get('http', {}).get('method')
     if http_method == 'OPTIONS':
         return {
@@ -64,40 +68,44 @@ def lambda_handler(event, context):
             'body': json.dumps('CORS OK')
         }
 
-    # Pegando o corpo da requisição e convertendo de string para JSON
     try:
         body_str = event.get('body', '{}')
         body = json.loads(body_str)
-        email_usuario = body.get('email')
+        
+        # Agora pegamos os dois campos que vêm do novo Frontend
+        tipo = body.get('tipo')
+        contato = body.get('contato')
 
-        if not email_usuario:
+        # Validação simples
+        if not tipo or not contato:
             return {
                 'statusCode': 400,
                 'headers': headers,
-                'body': json.dumps('Email nao fornecido no JSON')
+                'body': json.dumps('Dados incompletos: informe o tipo e o contato.')
             }
 
-        # Grava no dynamoDB, gerando um ID único para cada email
+        # Grava no DynamoDB
+        # Adicionei a coluna 'Tipo' e mudei a coluna de valor para 'Contato'
         table.put_item(
             Item={
                 'id': str(uuid.uuid4()),
-                'Emails': email_usuario
+                'Tipo': tipo, 
+                'Contato': contato,
+                'DataCadastro': datetime.now().isoformat() # Boa prática adicionar data de inclusão!
             }
         )
 
-        # Envia aviso de cadastro
-        html_email = monta_html_email(email_usuario)
-        enviar_email(email_usuario, html_email)
+        # Envia aviso de cadastro para você
+        html_email = monta_html_email(tipo, contato)
+        enviar_email(contato, html_email)
 
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps('E-mail cadastrado com sucesso!')
+            'body': json.dumps('Cadastro realizado com sucesso!')
         }
 
     except Exception as e:
-        # Se der erro no banco, retorna o erro com os Headers de CORS
-        # para que o navegador exiba o erro real em vez de travar no CORS
         print(f"Erro: {str(e)}")
         return {
             'statusCode': 500,

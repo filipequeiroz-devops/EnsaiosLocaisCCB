@@ -6,17 +6,23 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
-
 REGION     = "us-east-1" 
 TABLE_NAME = "EmailsEnsaiosLocaisGuarulhos"
 
 def buscar_emails_dynamo():
-    """Busca todos os e-mails cadastrados na tabela do DynamoDB."""
+    """Busca apenas os contatos do tipo 'email' na tabela do DynamoDB."""
     dynamodb = boto3.resource('dynamodb', region_name=REGION)
     table    = dynamodb.Table(TABLE_NAME)
     response = table.scan()
-    # Retorna uma lista apenas com os endereços de e-mail
-    return [item['Emails'] for item in response.get('Items', [])]
+    
+    lista_emails = []
+    # Percorre todos os itens retornados do banco
+    for item in response.get('Items', []):
+        # Filtra apenas se o 'Tipo' for 'email' e se o campo 'Contato' existir
+        if item.get('Tipo') == 'email' and item.get('Contato'):
+            lista_emails.append(item['Contato'])
+            
+    return lista_emails
 
 def enviar_email(destinatarios, mensagem_html):
     remetente = os.environ.get('EMAIL_USER')
@@ -26,11 +32,14 @@ def enviar_email(destinatarios, mensagem_html):
         print("Erro: Credenciais de e-mail não configuradas.")
         return
 
-    # MIMEMultipart para o Gmail entender que é um e-mail rico, ou seja, poder usar sintaxe HTML e deixar o e-mail mais bonito
+    # MIMEMultipart para o Gmail entender que é um e-mail rico
     msg = MIMEMultipart()
     msg['Subject'] = f"🔔 Aviso de Ensaio - {datetime.now().strftime('%d/%m/%Y')}"
     msg['From'] = f"Ensaios Guarulhos <{remetente}>"
-    msg['To'] = ", ".join(destinatarios)
+    
+    # Boa prática de segurança: Colocamos o seu próprio e-mail no "To" (Para).
+    # Os destinatários reais vão direto no .sendmail(), funcionando como BCC (Cópia Oculta).
+    msg['To'] = remetente
 
     # Anexando ao corpo do email
     msg.attach(MIMEText(mensagem_html, 'html'))
@@ -38,9 +47,9 @@ def enviar_email(destinatarios, mensagem_html):
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(remetente, senha)
-            # enviando o msg.as_string() que contém o HTML formatado
+            # Ao passar a lista 'destinatarios' aqui, e não no cabeçalho do e-mail, eles vão como cópia oculta
             server.sendmail(remetente, destinatarios, msg.as_string())
-        print(f"E-mail enviado com sucesso para {len(destinatarios)} pessoas!")
+        print(f"E-mail enviado com sucesso para {len(destinatarios)} pessoas (em cópia oculta)!")
     except Exception as e:
         print(f"Erro ao enviar e-mail: {e}")
 
@@ -53,7 +62,7 @@ def job():
     eventos_hoje = df[df['data'] == hoje]
 
     if not eventos_hoje.empty:
-        # inicio do html para a lista de eventos, que vai ser preenchida dinamicamente com os eventos encontrados para hoje
+        # inicio do html para a lista de eventos
         lista_eventos_html = ""
         
         # Percorre cada linha de evento encontrada para hoje
@@ -98,7 +107,7 @@ def job():
         if lista_emails:
             enviar_email(lista_emails, corpo_html)
         else:
-            print("Nenhum e-mail cadastrado no banco.")
+            print("Nenhum e-mail cadastrado no banco (ou nenhum do tipo 'email').")
     else:
         print(f"Nenhum evento agendado para hoje ({hoje}).")
 

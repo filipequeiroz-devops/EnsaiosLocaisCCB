@@ -10,6 +10,8 @@
             --success-color: #28a745;
             --error-color: #dc3545;
             --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --gray-light: #e9ecef;
+            --gray-dark: #6c757d;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,19 +32,59 @@
             border-radius: 16px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 400px; /* Mantém compacto no desktop e centralizado no mobile */
+            max-width: 400px;
             text-align: center;
         }
 
         h3 { 
             color: #333; 
-            margin-bottom: 20px; 
+            margin-bottom: 10px; 
             font-size: 1.5rem;
+        }
+
+        .subtitle {
+            color: #666; 
+            margin-bottom: 25px; 
+            font-size: 0.9rem;
+        }
+
+        /* Estilos do Toggle (Abas) */
+        .toggle-container {
+            display: flex;
+            background: var(--gray-light);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+	 .toggle-btn.active-whatsapp {
+            background: #25D366;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .input-group {
             display: flex;
-            flex-direction: column; /* Coluna no mobile por padrão */
+            flex-direction: column;
             gap: 12px;
         }
 
@@ -50,14 +92,15 @@
             padding: 14px; 
             border: 2px solid #eee; 
             border-radius: 8px; 
-            font-size: 16px; /* Evita zoom automático no iOS */
+            font-size: 16px; 
             outline: none;
             transition: border-color 0.3s;
+            width: 100%;
         }
 
         input:focus { border-color: var(--primary-color); }
 
-        button { 
+        button.submit-btn { 
             padding: 14px; 
             cursor: pointer; 
             background: var(--primary-color); 
@@ -67,10 +110,11 @@
             font-size: 16px; 
             font-weight: bold;
             transition: transform 0.2s, background 0.3s;
+            width: 100%;
         }
 
-        button:active { transform: scale(0.98); }
-        button:disabled { background: #ccc; cursor: not-allowed; }
+        button.submit-btn:active { transform: scale(0.98); }
+        button.submit-btn:disabled { background: #ccc; cursor: not-allowed; }
 
         #mensagem { 
             margin-top: 20px; 
@@ -79,12 +123,9 @@
             min-height: 20px;
         }
 
-        /* Responsividade para Telas Maiores (Desktop) */
         @media (min-width: 480px) {
-            .input-group {
-                flex-direction: row; /* Volta a ser linha em telas maiores */
-            }
-            input { flex: 1; margin-right: 0; }
+            .input-group { flex-direction: row; }
+            button.submit-btn { width: auto; }
         }
     </style>
 </head>
@@ -92,12 +133,17 @@
 
 <div class="form-container">
     <h3>Ensaios Guarulhos 🔔</h3>
-    <p style="color: #666; margin-bottom: 20px; font-size: 0.9rem;">Receba os avisos de ensaios em guarulhos direto no seu e-mail em dias de ensaio.</p>
+    <p class="subtitle">Receba os avisos em dias de ensaio. Como prefere ser avisado?</p>
     
-    <form id="emailForm">
+    <div class="toggle-container">
+        <button type="button" class="toggle-btn active" id="btnEmailType">E-mail</button>
+        <button type="button" class="toggle-btn" id="btnPhoneType">WhatsApp</button>
+    </div>
+
+    <form id="cadastroForm">
         <div class="input-group">
-            <input type="email" id="emailInput" placeholder="Digite seu e-mail" required>
-            <button type="submit" id="btnEnviar">Cadastrar</button>
+            <input type="email" id="contatoInput" placeholder="Digite seu e-mail" required>
+            <button type="submit" class="submit-btn" id="btnEnviar">Cadastrar</button>
         </div>
     </form>
     <p id="mensagem"></p>
@@ -105,11 +151,44 @@
 
 <script>
     const API_URL = "https://8v6vbvy0k3.execute-api.us-east-1.amazonaws.com/cadastro";
+    
+    // Controle de estado
+    let tipoCadastro = 'email'; // pode ser 'email' ou 'telefone'
+    const inputContato = document.getElementById('contatoInput');
+    const btnEmailType = document.getElementById('btnEmailType');
+    const btnPhoneType = document.getElementById('btnPhoneType');
 
-    document.getElementById('emailForm').addEventListener('submit', async (e) => {
+   // Alternar para E-mail
+    btnEmailType.addEventListener('click', () => {
+        tipoCadastro = 'email';
+        
+        // Ativa o visual do E-mail e remove o do WhatsApp
+        btnEmailType.classList.add('active');
+        btnPhoneType.classList.remove('active-whatsapp'); 
+        
+        inputContato.type = 'email';
+        inputContato.placeholder = 'Digite seu e-mail';
+        inputContato.value = ''; 
+    });
+
+    // Alternar para Telefone (WhatsApp)
+    btnPhoneType.addEventListener('click', () => {
+        tipoCadastro = 'telefone';
+        
+        // Ativa o visual verde do WhatsApp e remove o do E-mail
+        btnPhoneType.classList.add('active-whatsapp');
+        btnEmailType.classList.remove('active');
+        
+        inputContato.type = 'tel';
+        inputContato.placeholder = '(11) 90000-0000';
+        inputContato.value = ''; 
+    });
+
+    // Submissão do formulário
+    document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const email = document.getElementById('emailInput').value;
+        const valorContato = inputContato.value;
         const mensagem = document.getElementById('mensagem');
         const btn = document.getElementById('btnEnviar');
 
@@ -117,17 +196,23 @@
         mensagem.style.color = "#666";
         mensagem.innerText = "⏳ Processando...";
 
+        // Prepara o payload informando à API qual o tipo de dado está chegando
+        const payload = {
+            tipo: tipoCadastro,
+            contato: valorContato
+        };
+
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email })
+                body: JSON.stringify(payload)
             });
 
             if (response.ok) {
                 mensagem.style.color = "var(--success-color)";
-                mensagem.innerText = "✅ E-mail cadastrado com sucesso!";
-                document.getElementById('emailInput').value = "";
+                mensagem.innerText = `✅ ${tipoCadastro === 'email' ? 'E-mail' : 'Número'} cadastrado com sucesso!`;
+                inputContato.value = "";
             } else {
                 throw new Error();
             }
