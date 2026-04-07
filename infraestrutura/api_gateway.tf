@@ -1,6 +1,13 @@
 resource "aws_apigatewayv2_api" "lambda_api" {
   name          = "api-ensaios-locais"
   protocol_type = "HTTP"
+
+  # Proteção manual contra possíveis ataques DDoS, limitando o número de requisições
+  default_route_settings {
+    throttling_burst_limit = 3 # Máximo de requisições simultâneas em um pico
+    throttling_rate_limit  = 1   # Número constante de requisições por segundo (RPS)
+  }
+
   
   # Configuração de CORS para permitir envio de dados
   cors_configuration {
