@@ -26,9 +26,10 @@ def buscar_emails_dynamo():
             
     return lista_emails
 
-def buscar_telefones_dynamo(table):
+def buscar_telefones_dynamo():
     """Busca apenas os contatos do tipo 'telefone' na tabela do DynamoDB."""
-
+    dynamodb = boto3.resource('dynamodb', region_name=REGION)
+    table    = dynamodb.Table(TABLE_NAME)
     response = table.scan()
     
     lista_telefones = []
@@ -39,18 +40,42 @@ def buscar_telefones_dynamo(table):
             lista_telefones.append(item['Contato'])
     return lista_telefones
 
-def enviar_mensagem_whatsapp(telefone_destino, texto):
-    url = f"https://graph.facebook.com/v22.0/{os.environ.get('PHONE_NUMBER_ID')}/messages"
+
+def enviar_mensagem_whatsapp(telefone_destino, data, ensaios):
+    
+    url = f"https://graph.facebook.com/v25.0/{os.environ.get('PHONE_NUMBER_ID')}/messages"
+
     headers = {
         'Authorization': f'Bearer {os.environ.get("WHATSAPP_TOKEN")}',
-        'Content-Type' : 'application/json'
+        'Content-Type'   : 'application/json',
+        'accept'         : '*/*'
     }
+
     payload = {
-        "messaging_product": "whatsapp",
-        "recipient_type"   : "individual",
-        "to"               : telefone_destino,
-        "type"             : "text",
-        "text"             : {"preview_url": False, "body": texto}
+    "messaging_product": "whatsapp",
+    "to": telefone_destino,
+    "type": "template",
+    "template": {
+        "name": "aviso_ensaios",
+        "language": {
+            "code": "pt_BR"
+        },
+        "components": [
+            {
+                "type": "body",
+                "parameters": [
+                    {
+                        "type": "text",
+                        "text": data
+                    },
+                    {
+                        "type": "text",
+                        "text": ensaios
+                    }
+                ]
+            }
+        ]
+    }
     }
 
     data_bytes = json.dumps(payload).encode('utf-8')
@@ -58,9 +83,14 @@ def enviar_mensagem_whatsapp(telefone_destino, texto):
 
     try:
         with urllib.request.urlopen(req) as response:
-            print(f"Sucesso Mensagem whatsapp enviada! Status: {response.getcode()}")
+            print(f"Sucesso! Status: {response.getcode()}")
+    except urllib.error.HTTPError as e:
+        # Lendo o corpo do erro 400
+        corpo_erro = e.read().decode('utf-8')
+        print(f"Erro detalhado da Meta: {corpo_erro}")
     except Exception as e:
-        print(f"Erro WhatsApp: {str(e)}")
+        print(f"Erro genérico: {str(e)}")
+
 
 def enviar_email(destinatarios, mensagem_html):
     remetente = os.environ.get('EMAIL_USER')
@@ -99,12 +129,17 @@ def job():
     if not eventos_hoje.empty:
         # inicio do html para a lista de eventos
         lista_eventos_html = ""
+
+        # variável para montar a mensagem de whatsapp
+        ensaios = ""
         
         # Percorre cada linha de evento encontrada para hoje
         for index, row in eventos_hoje.iterrows():
-            local = row['Localidade']
-            hora = row['Horário']
-            waze = row['Waze']
+            local   = row['Localidade']
+            hora    = row['Horário']
+            waze    = row['Waze']
+
+            
             
             # Adiciona um bloco para cada ensaio na lista
             lista_eventos_html += f"""
@@ -116,6 +151,12 @@ def job():
                 </p>
             </div>
             """
+
+            #montando a mensagem de whatsapp com separadores simples
+            ensaios += f"📍 Local: {local} | ⏰ Hora: {hora}; "
+
+        #limpa os ;
+        ensaios = ensaios.strip("; ")
 
         # Monta o corpo final com a lista de eventos dentro
         corpo_html = f"""
@@ -137,12 +178,17 @@ def job():
         </html>
         """
         
-        lista_emails = buscar_emails_dynamo()
+        lista_emails    = buscar_emails_dynamo()
+        lista_telefones = buscar_telefones_dynamo() 
         
         if lista_emails:
             enviar_email(lista_emails, corpo_html)
         else:
             print("Nenhum e-mail cadastrado no banco (ou nenhum do tipo 'email').")
+
+        if lista_telefones:
+            for telefone in lista_telefones:
+                enviar_mensagem_whatsapp(telefone, hoje, ensaios)
     else:
         print(f"Nenhum evento agendado para hoje ({hoje}).")
 

@@ -7,9 +7,3 @@ variable "email_pass" {
   description = "Senha do e-mail do remetente para envio das notificações"
   type        = string
 }
-
-
-variable "varify_token" {
-  description = "Token de verificação para a API do WhatsApp"
-  type        = string
-}
