@@ -1,4 +1,9 @@
 
+# vaqui eu quis testar como as mensagens ficariam no whatsapp, usando o mesmo formato de separadores simples que usei no email, para ver se fica legível ou se preciso usar outro format
+# Precisei usar separadores simples (;) porque o WhatsApp não aceita mais do que 4 quebras de linha na mensagem do template, e queria manter uma estrutura clara para o usuário mesmo sem as quebras. O resultado ficou legível
+# Ficou legível... mas não era o que eu queria... .
+
+
 import os
 from dotenv import load_dotenv
 import pandas as pd
