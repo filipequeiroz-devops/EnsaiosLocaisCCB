@@ -186,8 +186,14 @@ def job():
         else:
             print("Nenhum e-mail cadastrado no banco (ou nenhum do tipo 'email').")
 
-        if lista_telefones:
-            for telefone in lista_telefones:
+
+        #Whatsapp precisa que o número comece com 55 para enviar a mensagem
+        numeros_com_55 = []
+        for i in lista_telefones:
+            numeros_com_55.append('55' + i if not i.startswith('55') else i)
+
+        if numeros_com_55:
+            for telefone in numeros_com_55:
                 enviar_mensagem_whatsapp(telefone, hoje, ensaios)
     else:
         print(f"Nenhum evento agendado para hoje ({hoje}).")
