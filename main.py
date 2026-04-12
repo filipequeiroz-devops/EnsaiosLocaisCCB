@@ -8,6 +8,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
+#variaveis de ambiente
 REGION     = "us-east-1" 
 TABLE_NAME = "EmailsEnsaiosLocaisGuarulhos"
 
