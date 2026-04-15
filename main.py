@@ -154,7 +154,7 @@ def job():
             """
 
             #montando a mensagem de whatsapp com separadores simples
-            ensaios += f"📍 Local: {local} | ⏰ Hora: {hora}; "
+            ensaios += f"📍 Local: {local} | ⏰ Hora: {hora};--------------------------------"
 
         #limpa os ;
         ensaios = ensaios.strip("; ")

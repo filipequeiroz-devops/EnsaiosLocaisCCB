@@ -13,7 +13,7 @@ import json
 load_dotenv()  # Carrega as variáveis de ambiente do arquivo .env
 
 #Crando uma data Teste
-data_str = "2026-04-10 17:58:11.975078"
+data_str = "2026-04-04 17:58:11.975078"
 data = datetime.strptime(data_str, "%Y-%m-%d %H:%M:%S.%f")
 
 hoje       = data.strftime('%Y-%m-%d')
@@ -82,8 +82,7 @@ for index, row in eventos_hoje.iterrows():
     local = row['Localidade']
     hora = row['Horário']
     # Usando separadores simples em vez de quebras de linha
-    ensaios += f"📍 Local: {local} | ⏰ Hora: {hora}; "
-
+    ensaios += f"📍 Local: {local} | ⏰ Hora: {hora};--------------------------------"
 # Remove o último ponto e vírgula se quiser
 ensaios = ensaios.strip("; ")
 
