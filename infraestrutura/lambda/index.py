@@ -83,7 +83,7 @@ def lambda_handler(event, context):
         body_str = event.get('body', '{}')
         body     = json.loads(body_str)
         
-        # Agora pegamos os dois campos que vêm do novo Frontend
+        # Pega os contatos do frontend
         tipo    = body.get('tipo')
         contato = body.get('contato')
 

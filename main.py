@@ -124,7 +124,7 @@ def job():
     df         = pd.read_csv('EnsaiosGuarulhos.csv') 
     df['data'] = df['data'].astype(str).str.strip()
     
-    # Filtra TODOS os eventos de hoje
+    # Filtrando eventos do dia
     eventos_hoje = df[df['data'] == hoje]
 
     if not eventos_hoje.empty:
@@ -142,7 +142,7 @@ def job():
 
             
             
-            # Adiciona um bloco para cada ensaio na lista
+            # Adiciona um bloco para cada ensaios na lista
             lista_eventos_html += f"""
             <div style="background-color: #ffffff; padding: 15px; border-radius: 8px; border-left: 5px solid #007bff; margin-bottom: 20px; border-right: 1px solid #eee; border-top: 1px solid #eee; border-bottom: 1px solid #eee;">
                 <p style="margin: 5px 0;">📍 <b>Local:</b> {local}</p>
@@ -153,7 +153,7 @@ def job():
             </div>
             """
 
-            #montando a mensagem de whatsapp com separadores simples
+            # Montando a mensagem de whatsapp com separadores simples
             ensaios += f"📍 Local: {local} | ⏰ Hora: {hora};--------------------------------"
 
         #limpa os ;
