@@ -31,17 +31,6 @@ def buscar_telefones_dynamo(table):
     return lista_telefones
 
 
-def buscar_telefones_dynamo(table):
-    """Busca apenas os contatos do tipo 'telefone' na tabela do DynamoDB."""
-
-    response = table.scan()
-    
-    lista_emails = []
-    for item in response.get('Items', []):
-        if item.get('Emails'):
-            lista_emails.append(item['Emails'])
-    return lista_emails
-
 emails    = buscar_emails_dynamo(table)
 telefones = buscar_telefones_dynamo(table)
 print("Contatos do tipo 'email':")

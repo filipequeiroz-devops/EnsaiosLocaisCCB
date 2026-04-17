@@ -19,3 +19,9 @@ variable "datadog_app_key" {
   type        = string
   sensitive   = true
 }
+
+variable "senha_dynamo" {
+  description = "Senha para acesso ao DynamoDB"
+  type        = string
+  sensitive   = true
+}

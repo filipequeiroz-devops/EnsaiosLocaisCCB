@@ -1,0 +1,1 @@
+invoke-restmethod -Uri "http://localhost:4566/2015-03-31/functions/listacontatos/invocations" -Method POST -Body '{}' -Headers @{"Authorization"="Bearer HBFbqks0(&¨$9820NFOLAJ@02948nmKkjj"}

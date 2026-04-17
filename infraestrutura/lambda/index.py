@@ -15,9 +15,6 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource('dynamodb')
 table    = dynamodb.Table('EmailsEnsaiosLocaisGuarulhos')
 
-# Token da meta para validar o webhook do WhatsApp (não é usado na função Lambda, mas é necessário para a configuração do webhook)
-
-
 def monta_html_email(tipo_cadastro, contato_usuario):
     tipo_formatado = "E-mail" if tipo_cadastro == "email" else "WhatsApp (Telefone)"
     
