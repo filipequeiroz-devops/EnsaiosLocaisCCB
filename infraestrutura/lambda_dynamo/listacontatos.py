@@ -9,8 +9,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # ColdStart
-dynamodb = boto3.resource('dynamodb')
-table    = dynamodb.Table(os.getenv('TABLE_NAME'))
+dynamodb     = boto3.resource('dynamodb')
+table        = dynamodb.Table(os.getenv('TABLE_NAME'))
 senha_dynamo = os.getenv('SENHA_DYNAMO')
 
 def buscar_emails_dynamo(table):
@@ -43,11 +43,10 @@ def buscar_telefones_dynamo(table):
 def lambda_handler(event, context):
     logger.info("Iniciando listagem de contatos cadastrados no DynamoDB.")
 
-    # 1. Removida a senha do Dynamo dos headers de RESPOSTA por segurança.
-    # Adicionado 'Authorization' no Allow-Headers para o CORS funcionar com o seu token.
+
     headers = {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', 
+        'Access-Control-Allow-Origin': '*',  #permissao para chamar de qualquer lyugar por enquanto para teste
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization' 
     }
@@ -80,25 +79,25 @@ def lambda_handler(event, context):
                 lista_telefones = buscar_telefones_dynamo(table)
 
                 response_body = {
-                    'emails': lista_emails,
+                    'emails'   : lista_emails,
                     'telefones': lista_telefones
                 }
 
                 return {
                     'statusCode': 200,
-                    'headers': headers,
-                    'body': json.dumps(response_body)
+                    'headers'   : headers,
+                    'body'      : json.dumps(response_body)
                 }
             except Exception as e:
                 logger.error(f"Erro ao buscar contatos no DynamoDB: {str(e)}")
                 return {
                     'statusCode': 500,
-                    'headers': headers,
-                    'body': json.dumps('Erro interno ao buscar contatos')
+                    'headers'   : headers,
+                    'body'      : json.dumps('Erro interno ao buscar contatos')
                 }
                 
     return {
         'statusCode': 405, 
-        'headers': headers,
-        'body': json.dumps(f'Metodo HTTP não suportado: {http_method}')
+        'headers'   : headers,
+        'body'      : json.dumps(f'Metodo HTTP não suportado: {http_method}')
     }
