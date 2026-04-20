@@ -61,10 +61,10 @@ def lambda_handler(event, context):
     logger.info("Iniciando o disparo de notificações para os ensaios desta semana.")
 
     headers = {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://ensaios-locais-guarulhos.filipe-deabreu.com/',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Content-Type'                 : 'application/json',
+        'Access-Control-Allow-Origin'  : 'https://ensaios-locais-guarulhos.filipe-deabreu.com/',
+        'Access-Control-Allow-Methods' : 'POST, OPTIONS',
+        'Access-Control-Allow-Headers' : 'Content-Type'
     }
 
     http_method = event.get('requestContext', {}).get('http', {}).get('method')

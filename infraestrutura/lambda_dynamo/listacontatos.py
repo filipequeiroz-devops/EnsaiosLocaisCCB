@@ -46,12 +46,12 @@ def lambda_handler(event, context):
 
     headers = {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',  #permissao para chamar de qualquer lyugar por enquanto para teste
+        'Access-Control-Allow-Origin': '*',  #permissao para chamar de qualquer lugar por enquanto para teste
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization' 
     }
 
-    # 2. Captura o método de forma compatível com REST API (v1) e HTTP API (v2)
+    # Captura o método de forma compatível com REST API (v1) e HTTP API (v2)
     http_method = event.get('httpMethod') or event.get('requestContext', {}).get('http', {}).get('method')
     
     if http_method == 'OPTIONS':
@@ -66,11 +66,11 @@ def lambda_handler(event, context):
         auth_header = event_headers.get('Authorization') or event_headers.get('authorization')
         logger.info(f"Header recebido: {auth_header}")
         logger.info(f"Senha esperada: Bearer {senha_dynamo}")
-        if auth_header != f'Bearer {senha_dynamo}':
+        if auth_header != f'Bearer {senha_dynamo}': #compara a senha recebida com a senha esparada
             return {
                 'statusCode': 401,
-                'headers': headers,
-                'body': json.dumps('Unauthorized')
+                'headers'   : headers,
+                'body'      : json.dumps('Unauthorized')
             }
         
         else:
