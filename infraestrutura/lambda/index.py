@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import logging
+import re
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -91,6 +92,15 @@ def lambda_handler(event, context):
                 'headers': headers,
                 'body': json.dumps('Dados incompletos: informe o tipo e o contato.')
             }
+
+        #regex para emails
+        padrao = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+
+        #validação para possiveis ataques de injeção de código, validando o formato do email
+        if tipo == "email":
+            a = re.match(padrao, contato) is not None
+            if not a:
+                contato = "Contato inválido"
 
         # Grava no DynamoDB
         table.put_item(
