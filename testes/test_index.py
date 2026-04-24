@@ -1,7 +1,7 @@
 import unittest
-from dotenv import load_dotenv
 import os
 from unittest.mock import patch, MagicMock
+from dotenv import load_dotenv
 from infraestrutura.lambda_index.index import monta_html_email, enviar_email, lambda_handler
 
 # Carregar variáveis de ambiente

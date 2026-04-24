@@ -20,9 +20,9 @@ resource "aws_lambda_function" "Lista_Contatos_Lambda" {
 
   environment {
     variables = {
-      TABLE_NAME   = aws_dynamodb_table.EmailsEnsaiosLocaisGuarulhos.name
-      EMAIL_USER   = var.email_user
-      EMAIL_PASS   = var.email_pass
+      TABLE_NAME                     = aws_dynamodb_table.EmailsEnsaiosLocaisGuarulhos.name
+      EMAIL_USER                     = var.email_user
+      EMAIL_PASS                     = var.email_pass
       DD_LAMBDA_HANDLER              = "listacontatos.lambda_handler" # Especifica o handler para a extensão do Datadog (Nome do arquivo.nome da função)
       DD_API_KEY                     = var.datadog_api_key
       DD_SITE                        = "us5.datadoghq.com"
