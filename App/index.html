@@ -21,9 +21,11 @@
             background: var(--bg-gradient);
             min-height: 100vh;
             display: flex; 
+            flex-direction: column; /* Obriga os elementos a empilharem verticalmente */
             align-items: center;
             justify-content: center; 
             padding: 20px; 
+            gap: 20px; /* Adiciona um espaçamento uniforme entre os containers */
         }
 
         .form-container { 
@@ -34,6 +36,33 @@
             width: 100%;
             max-width: 400px;
             text-align: center;
+        }
+
+        .publicidade {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px;
+            border-radius: 16px; /* Ajustado para combinar com o form */
+            font-size: 14px;
+            width: 100%; /* Garante que preencha o espaço */
+            max-width: 400px; /* Limita ao mesmo tamanho do form */
+            text-align: center; /* Centralizado para melhor leitura do bloco inteiro */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .publicidade h3 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .publicidade .subtitle {
+            color: #f0f0f0;
+            margin-bottom: 15px;
+        }
+
+        .publicidade a {
+            color: white;
+            text-decoration: underline;
         }
 
         h3 { 
@@ -76,7 +105,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-	 .toggle-btn.active-whatsapp {
+     .toggle-btn.active-whatsapp {
             background: #25D366;
             color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -100,7 +129,7 @@
 
         input:focus { border-color: var(--primary-color); }
 
-        button.submit-btn { 
+        button.submit-btn, a.btn-whatsapp { 
             padding: 14px; 
             cursor: pointer; 
             background: var(--primary-color); 
@@ -111,9 +140,15 @@
             font-weight: bold;
             transition: transform 0.2s, background 0.3s;
             width: 100%;
+            display: inline-block;
+            text-decoration: none;
+        }
+        
+        a.btn-whatsapp {
+            background: #25D366;
         }
 
-        button.submit-btn:active { transform: scale(0.98); }
+        button.submit-btn:active, a.btn-whatsapp:active { transform: scale(0.98); }
         button.submit-btn:disabled { background: #ccc; cursor: not-allowed; }
 
         #mensagem { 
@@ -131,6 +166,7 @@
 </head>
 <body>
 
+<!-- O form-container agora vem PRIMEIRO -->
 <div class="form-container">
     <h3>Ensaios Guarulhos 🔔</h3>
     <p class="subtitle">Receba os avisos em dias de ensaio. Como prefere ser avisado?</p>
@@ -149,11 +185,17 @@
     <p id="mensagem"></p>
 </div>
 
+<div class="publicidade">
+    <h3>Gostaria de saber mais sobre minha empresa de tecnologia?</h3>
+    <p class="subtitle">Entre em contato comigo para saber mais sobre meus serviços ou acesse meu <a href="https://nas-nuvens.filipe-deabreu.com/" target="_blank"> <b>Site</b></a>.</p>
+    <a href="https://wa.me/5511973124151" target="_blank" class="btn-whatsapp">Falar no WhatsApp</a>
+</div> 
+
 <script>
     const API_URL = "https://8v6vbvy0k3.execute-api.us-east-1.amazonaws.com/cadastro";
     
     // Controle de estado
-    let tipoCadastro = 'email'; // pode ser 'email' ou 'telefone'
+    let tipoCadastro = 'email'; 
     const inputContato = document.getElementById('contatoInput');
     const btnEmailType = document.getElementById('btnEmailType');
     const btnPhoneType = document.getElementById('btnPhoneType');
@@ -162,7 +204,6 @@
     btnEmailType.addEventListener('click', () => {
         tipoCadastro = 'email';
         
-        // Ativa o visual do E-mail e remove o do WhatsApp
         btnEmailType.classList.add('active');
         btnPhoneType.classList.remove('active-whatsapp'); 
         
@@ -175,7 +216,6 @@
     btnPhoneType.addEventListener('click', () => {
         tipoCadastro = 'telefone';
         
-        // Ativa o visual verde do WhatsApp e remove o do E-mail
         btnPhoneType.classList.add('active-whatsapp');
         btnEmailType.classList.remove('active');
         
@@ -196,7 +236,6 @@
         mensagem.style.color = "#666";
         mensagem.innerText = "⏳ Processando...";
 
-        // Prepara o payload informando à API qual o tipo de dado está chegando
         const payload = {
             tipo: tipoCadastro,
             contato: valorContato
